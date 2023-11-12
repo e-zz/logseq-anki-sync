@@ -9,7 +9,7 @@
   "author": "@debanjandhar12",
   "scripts": {
     "dev": "vite",
-    "build": "export NODE_OPTIONS=--max_old_space_size=4096 && vite build",
+    "build": "vite build",
     "preinstall": "npx only-allow yarn",
     "test": "vitest"
   },
