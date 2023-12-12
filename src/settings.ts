@@ -88,6 +88,14 @@ export const addSettingsToLogseq = () => {
             enumPicker: "select",
         },
         {
+            key: "showClozesOnHoverInAnki",
+            type: "boolean",
+            default: false,
+            title: "Display Anki Cloze content on mouse hover? (Recommended: Disabled) [Experimental] [In Development]",
+            description:
+                "When enabled, the content in Anki Cloze Macros ({{c1 Pikachu}}, {{c2 Mew}}, ...) will be blank visible only in mouse hover mode.",
+        },
+        {
             key: "advancedSettingsHeading",
             title: "🐯 Advanced Settings",
             description: "",
