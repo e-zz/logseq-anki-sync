@@ -1,12 +1,12 @@
 /***
  * This files contains the js for the front side of anki cards.
  */
-import { fabric } from "fabric";
-import { createOcclusionRectEl } from "../ui/customized/OcclusionEditor";
+import {fabric} from "fabric";
+import {createOcclusionRectEl} from "../ui/customized/OcclusionEditor";
 import path from "path-browserify";
 
 const onLoadHandler = () => {
-    if (type == "image_occlusion") {
+    if (window.type == "image_occlusion") {
         // Get current cloze id (only works for image occlusion)
         let currentClozeId = "-1";
         for (let i = 1; i <= 9; i++)
@@ -16,12 +16,9 @@ const onLoadHandler = () => {
         if (!document.getElementById("localImgBasePath")) return;
         // Get localImgBasePath
         let localImgBasePath = document.getElementById("localImgBasePath").src;
-        localImgBasePath = localImgBasePath.substring(
-            0,
-            localImgBasePath.lastIndexOf("/"),
-        );
+        localImgBasePath = localImgBasePath.substring(0, localImgBasePath.lastIndexOf("/"));
         // Replace all images with canvas
-        let imgToCanvasHashMap = {};
+        let imgToCanvasListHashMap = {};
         let images = Array.from(document.getElementsByTagName("img"));
         for (let image of images) {
             image.style.visibility = "hidden";
@@ -38,50 +35,69 @@ const onLoadHandler = () => {
                 let scaleX = canvas.width / imgFabric.width,
                     scaleY = canvas.height / imgFabric.height;
                 canvas.setViewportTransform([scaleX, 0, 0, scaleY, 0, 0]);
-                canvas.setBackgroundImage(
-                    imgFabric,
-                    canvas.renderAll.bind(canvas),
-                    {
-                        scaleX: 1,
-                        scaleY: 1,
-                    },
-                );
+                canvas.setBackgroundImage(imgFabric, canvas.renderAll.bind(canvas), {
+                    scaleX: 1,
+                    scaleY: 1,
+                });
             };
             canvasEl.style.position = "relative";
             image.replaceWith(canvasEl);
-            if (imgToCanvasHashMap[image.src] == null)
-                imgToCanvasHashMap[image.src] = [];
-            imgToCanvasHashMap[image.src].push(canvas);
+            if (imgToCanvasListHashMap[image.src] == null)
+                imgToCanvasListHashMap[image.src] = [];
+            imgToCanvasListHashMap[image.src].push(canvas);
         }
 
         // Show the main content (without images)
         document.getElementById("main-content").style.visibility = "visible";
 
-        // Iterate the imgToOcclusionArrHashMap to draw the occlusion and inject the canvas into dom instead of images
-        let imgToOcclusionArrHashMap = JSON.parse(
-            document.getElementById("imgToOcclusionArrHashMap").innerHTML,
+        // Iterate the images in imgToOcclusionDataHashMap and inject the canvas into dom instead of images
+        let imgToOcclusionDataHashMap = JSON.parse(
+            document.getElementById("imgToOcclusionDataHashMap").innerHTML,
         );
-        for (let image in imgToOcclusionArrHashMap) {
-            console.log(image, imgToOcclusionArrHashMap, imgToOcclusionArrHashMap[image], imgToCanvasHashMap, imgToCanvasHashMap[image]);
-            let occlusionArr = imgToOcclusionArrHashMap[image];
-            occlusionArr.forEach((obj) => {
-                if (obj.cId == currentClozeId) {
-                    (
-                        imgToCanvasHashMap[localImgBasePath + "/" + path.basename(image)] ||
-                        imgToCanvasHashMap[encodeURI(localImgBasePath + "/" + path.basename(image))] ||
-                        imgToCanvasHashMap[image] ||
-                        imgToCanvasHashMap[encodeURI(image)] ||
-                        []
-                    ).forEach((canvas) => {
+        for (let image in imgToOcclusionDataHashMap) {
+            let occlusionElements = imgToOcclusionDataHashMap[image].elements;
+            let occlusionConfig = imgToOcclusionDataHashMap[image].config;
+            console.log(occlusionConfig);
+            occlusionElements.forEach((occlusionElem) => {
+                let canvasList =
+                    imgToCanvasListHashMap[localImgBasePath + "/" + path.basename(image)] ||
+                    imgToCanvasListHashMap[
+                        encodeURI(localImgBasePath + "/" + path.basename(image))
+                    ] ||
+                    imgToCanvasListHashMap[image] ||
+                    imgToCanvasListHashMap[encodeURI(image)] ||
+                    [];
+                if (occlusionElem.cId == currentClozeId) {
+                    canvasList.forEach((canvas) => {
                         let occlusion = createOcclusionRectEl(
-                            obj.left,
-                            obj.top,
-                            obj.width,
-                            obj.height,
-                            obj.angle,
-                            obj.cId,
+                            occlusionElem.left,
+                            occlusionElem.top,
+                            occlusionElem.width,
+                            occlusionElem.height,
+                            occlusionElem.angle,
+                            occlusionElem.cId,
                         );
                         occlusion._objects[0].set("opacity", 1);
+                        canvas.add(occlusion);
+                        canvas.renderAll();
+                    });
+                } else if (
+                    occlusionElem.cId != currentClozeId &&
+                    occlusionConfig.hideAllTestOne == true
+                ) {
+                    canvasList.forEach((canvas) => {
+                        let occlusion = createOcclusionRectEl(
+                            occlusionElem.left,
+                            occlusionElem.top,
+                            occlusionElem.width,
+                            occlusionElem.height,
+                            occlusionElem.angle,
+                            occlusionElem.cId,
+                        );
+                        occlusion._objects[0].set("opacity", 1);
+                        occlusion._objects[0].set("fill", "#3b4042");
+                        occlusion._objects[0].set("stroke", "#2a3942");
+                        occlusion._objects[1].set("opacity", 0);
                         canvas.add(occlusion);
                         canvas.renderAll();
                     });
@@ -89,10 +105,10 @@ const onLoadHandler = () => {
             });
         }
     }
-}
+};
 
 if (document.readyState === "complete") {
     onLoadHandler();
 } else {
-    window.addEventListener('load', onLoadHandler);
+    window.addEventListener("load", onLoadHandler);
 }

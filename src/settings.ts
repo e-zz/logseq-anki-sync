@@ -1,8 +1,8 @@
-import { SettingSchemaDesc } from "@logseq/libs/dist/LSPlugin";
+import {SettingSchemaDesc} from "@logseq/libs/dist/LSPlugin";
 import _ from "lodash";
-import { AddonRegistry } from "./addons/AddonRegistry";
-import { LogseqProxy } from "./logseq/LogseqProxy";
-import { DONATE_ICON } from "./constants";
+import {AddonRegistry} from "./addons/AddonRegistry";
+import {LogseqProxy} from "./logseq/LogseqProxy";
+import {DONATE_ICON} from "./constants";
 
 export const addSettingsToLogseq = () => {
     const settingsTemplate: SettingSchemaDesc[] = [
@@ -38,8 +38,7 @@ export const addSettingsToLogseq = () => {
             type: "boolean",
             default: true,
             title: "Include parent content in cards? (Recommended: Enabled)",
-            description:
-                "When enabled, the parent blocks content will be shown in the card.",
+            description: "When enabled, the parent blocks content will be shown in the card.",
         },
         {
             key: "defaultDeck",
@@ -96,6 +95,23 @@ export const addSettingsToLogseq = () => {
             default: null,
         },
         {
+            key: "ankiFieldOptions",
+            type: "enum",
+            default: [],
+            title: "Select different field options to apply to Anki cards? (Recommended: None)",
+            description: "This option allows you to add different filters and additional stuff to the Anki card templates. " +
+                "Takes effect only after next sync.",
+            enumChoices: [
+                "furigana",
+                "kana",
+                "kanji",
+                "tts",
+                "tags",
+                "rtl"
+            ],
+            enumPicker: "checkbox",
+        },
+        {
             key: "cacheLogseqAPIv1",
             type: "boolean",
             default: true,
@@ -119,19 +135,17 @@ export const addSettingsToLogseq = () => {
         },
     ];
     LogseqProxy.Settings.useSettingsSchema(settingsTemplate);
-    LogseqProxy.Settings.registerSettingsChangeListener(
-        (newSettings, oldSettings) => {
-            if (oldSettings.addons === undefined) oldSettings.addons = [];
-            if (!_.isEqual(newSettings.addons, oldSettings.addons)) {
-                for (const addon of oldSettings.addons) {
-                    AddonRegistry.get(addon).remove();
-                }
-                for (const addon of newSettings.addons) {
-                    AddonRegistry.get(addon).init();
-                }
+    LogseqProxy.Settings.registerSettingsChangeListener((newSettings, oldSettings) => {
+        if (oldSettings.addons === undefined) oldSettings.addons = [];
+        if (!_.isEqual(newSettings.addons, oldSettings.addons)) {
+            for (const addon of oldSettings.addons) {
+                AddonRegistry.get(addon).remove();
             }
-        },
-    );
+            for (const addon of newSettings.addons) {
+                AddonRegistry.get(addon).init();
+            }
+        }
+    });
     logseq.provideStyle(`
         [data-id="${logseq.baseInfo.id}"] .cp__plugins-settings-inner code {
             display: none;
