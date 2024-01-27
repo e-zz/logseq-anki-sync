@@ -63,9 +63,9 @@ export class ClozeNote extends Note {
                 if (!clozes) return;
                 clozes = elem.querySelectorAll('span[title^="Unsupported macro name: c"]');
                 clozes.forEach(async (cloze) => {
-                    if (/c(loze)?\d$/.test((cloze as Element & { title }).title)) {
+                    if (/c(loze)?\d+$/.test((cloze as Element & { title }).title)) {
                         let content = cloze.innerHTML.replace(
-                            /^{?{{c(?:loze)?\d (.*?)((::|\\\\).*)?}}}?$/,
+                            /^{?{{c(?:loze)?\d+ (.*?)((::|\\\\).*)?}}}?$/,
                             "$1",
                         );
                         if (logseq.settings.renderClozeMarcosInLogseq)
@@ -114,7 +114,7 @@ export class ClozeNote extends Note {
         // --- Add anki cloze marco clozes ---
         clozedContent = safeReplace(
             clozedContent,
-            /\{\{c(\d) (.*?)\}\}/g,
+            /\{\{c(\d+) (.*?)\}\}/g,
             (match, group1, group2) => {
                 cloze_id = Math.max(cloze_id, parseInt(group1) + 1);
                 group2 = group2.replace(
@@ -181,7 +181,7 @@ export class ClozeNote extends Note {
         // --- Add logseq clozes ---
         clozedContent = safeReplace(
             clozedContent,
-            /\{\{cloze(\d{1,})? (.*?)\}\}/g,
+            /\{\{cloze(\d+)? (.*?)\}\}/g,
             (match, group1, group2) => {
                 group2 = group2.replace(
                     /(.*)(\\\\|::)(.*)/,
